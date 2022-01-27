@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover" />
+	<meta name="description" content="Nodes with varying lists of ports on each of four sides." />
+	<title>Dynamic Ports</title>
+	<script src="./go-bug.js"></script>
+</head>
+
+<body>
+
+	<div class="md:flex flex-col md:flex-row md:min-h-screen w-full max-w-screen-xl mx-auto">
+	</div>
+</body>
+
+
+<div class="p-4 w-full">
+	<script id="code">
+
+		function textStyle() {
+			return { font: "9pt  Segoe UI,sans-serif", stroke: "white" };
+		}
+
+		function init() {
+			var $ = go.GraphObject.make;  //for conciseness in defining node templates
+
+			function A(e) {
+					return [new go.Binding("location","path",go.Point.parse).makeTwoWay(go.Point.stringify), {
+							stretch: "paletteBg" === e ? go.GraphObject.Horizontal : go.GraphObject.Fill,
+							doubleClick: () => {
+								console.log('aaa')
+							},
+							selectionAdorned: !1,
+							selectionChanged: function(t) {
+									!function(e, t) {
+											if ("paletteBg" !== t) {
+													var n = e.findObject(t);
+													null !== n && (e.isSelected ? n.stroke = "#1890FF" : (n.fill = "#fff",
+													n.stroke = "#fff"))
+											}
+									}(t, e)
+							},
+							isShadowed: !0,
+							shadowBlur: 6,
+							shadowColor: "rgba(0, 0, 0, .12)",
+							shadowOffset: new go.Point(0,0)
+					}, {
+							contextMenu: c
+					}]
+			}
+
+			var c = $(go.HTMLInfo, {
+					show: function(e, t) {
+							var i = t.commandHandler;
+							function a(e, t) {
+									// t ? !n.showMenu.includes(e) && n.showMenu.push(e) : n.showMenu = n.showMenu.filter(function(t) {
+									// 		return t !== e
+									// })
+									
+							}
+							// if (a("copy", n.canEdit && i.canCopySelection()),
+							// a("paste", n.canEdit && i.canPasteSelection(t.toolManager.contextMenuTool.mouseDownPoint)),
+							// a("delete", n.canEdit && i.canDeleteSelection()),
+							// n.showMenu.length) {
+							// 		var o = t.lastInput.viewPoint;
+							// 		g.style.left = o.x + 5 + "px",
+							// 		g.style.top = o.y + "px"
+							// }
+							// window.addEventListener("click", b, !0)
+					},
+					hide: function() {
+							// n.showMenu = [],
+							// window.removeEventListener("click", b, !0)
+					}
+			});
+
+			myDiagram =
+				$(go.Diagram, "myDiagramDiv",  //Diagram refers to its DIV HTML element by id
+					{ "undoManager.isEnabled": true });
+
+			// when the document is modified, add a "*" to the title and enable the "Save" button
+			myDiagram.addDiagramListener("Modified", function (e) {
+				var button = document.getElementById("SaveButton");
+				if (button) button.disabled = !myDiagram.isModified;
+				var idx = document.title.indexOf("*");
+				if (myDiagram.isModified) {
+					if (idx < 0) document.title += "*";
+				} else {
+					if (idx >= 0) document.title = document.title.substr(0, idx);
+				}
+			});
+
+
+			var portSize = new go.Size(8, 8);
+
+			// var portMenu =  // context menu for each port
+			// 	$("ContextMenu",
+			// 		makeButton("Swap order",
+			// 			function (e, obj) { swapOrder(obj.part.adornedObject); }),
+			// 		makeButton("Remove port",
+			// 			// in the click event handler, the obj.part is the Adornment;
+			// 			// its adornedObject is the port
+			// 			function (e, obj) { removePort(obj.part.adornedObject); }),
+			// 		makeButton("Change color",
+			// 			function (e, obj) { changeColor(obj.part.adornedObject); }),
+			// 		makeButton("Remove side ports",
+			// 			function (e, obj) { removeAll(obj.part.adornedObject); })
+			// 	);
+
+
+			// the node template
+			myDiagram.nodeTemplate =
+			// $("normal", $(go.Node, "Auto"), A("normalBg"),
+			$(go.Node, "Auto"),
+			$(go.Shape, "RoundedRectangle", {
+				// name: "normalBg",
+				fill: "#fff",
+				stroke: null,
+				strokeWidth: 2
+			}),
+			$(go.Panel, "Table", {
+				minSize: new go.Size(180,30),
+				margin: new go.Margin(0,10,10,10)
+			},
+			$(go.RowColumnDefinition, {
+					column: 0,
+					stretch: go.GraphObject.Horizontal,
+					alignment: go.Spot.Left
+			}),
+			$(go.TextBlock, {
+					column: 0,
+					font: "14px bold ",
+					stroke: "#2E3846",
+					editable: !1,
+					margin: new go.Margin(15,0,0,3),
+					wrap: go.TextBlock.WrapFit,
+					alignment: go.Spot.TopLeft
+			}, new go.Binding("text","",function(e) {
+					return 'aaaa:bbb'
+			}
+			)),
+			$(go.TextBlock, {
+						column: 0,
+						font: "14px bold ",
+						stroke: "#333",
+						margin: new go.Margin(10,0,10,3),
+						editable: !1,
+						alignment: go.Spot.TopLeft,
+						maxSize: new go.Size(450,NaN)
+				}, new go.Binding("text","",function(e) {
+						// var t = e.textAudioContentList;
+						return '是啊是啊' || "-"
+				}
+				)),
+
+				// $(go.Panel, "Horizontal", {
+				// 		alignment: go.Spot.BottomCenter
+				// },
+				// new go.Binding("itemArray", "topArray", {
+				// 	column: 0,
+				// 	itemTemplate: $(go.Panel, "Auto", {
+				// 				fromSpot: go.Spot.Bottom,
+				// 				toSpot: go.Spot.Bottom,
+				// 				fromLinkable: !0,
+				// 				toLinkable: !1,
+				// 				toMaxLinks: 1,
+				// 				fromMaxLinks: 1,
+				// 				cursor: "pointer",
+				// 				margin: new go.Margin(0,8,0,3),
+				// 				alignment: go.Spot.Center
+				// 		}, new go.Binding("portId","id",function(e) {
+				// 				return e.toString()
+				// 		}),
+				// 		$(go.Shape, "RoundedRectangle", {
+				// 					stroke: null,
+				// 					strokeWidth: 0,
+				// 					toMaxLinks: 1,
+				// 					fill: "#DFDEDE"
+				// 			}, new go.Binding("fill","branchProperty",function(e) {
+				// 					return "#DFDEDE"
+				// 			}
+				// 		)), $(go.TextBlock, {
+				// 					font: "12px bold ",
+				// 					stroke: "#333",
+				// 					margin: new go.Margin(4,4,4,3),
+				// 					textAlign: "center"
+				// 			}, new go.Binding("text","name"), new go.Binding("stroke","branchProperty",function(e) {
+				// 					return "#333"
+				// 					})
+				// 			)
+				// 		)
+				// 	})
+				// )
+			// )
+			),
+
+
+
+
+
+
+
+
+
+				/*
+				$(go.Node, "Table",
+					{
+						// locationObjectName: "BODY",
+						// locationSpot: go.Spot.Center,
+						// selectionObjectName: "BODY",
+						// contextMenu: nodeMenu,
+						// minSize: new go.Size(200, 30),
+						margin: new go.Margin(0,10,10,10),
+						background: '#d3d3d3',
+					},
+					new go.Binding("location", "loc", go.Point.parse).makeTwoWay(go.Point.stringify),
+
+
+
+					// the body
+					$(go.Panel, "Auto",
+						{
+							row: 1, column: 1, name: "BODY",
+							stretch: go.GraphObject.Fill,
+							margin: new go.Margin(0,3,0,3),
+
+
+						},
+						$(go.Shape, "Rectangle",
+							{
+								fill: "green", stroke: null, strokeWidth: 0,
+								// minSize: new go.Size(180, 30),
+								// maxSize: new go.Size(450, NaN), 
+							}
+						),
+
+
+
+						$(go.Panel, 'Table',
+							{ margin: new go.Margin(0, 0, 0, 0) },
+							$(go.TextBlock, 
+								{ 
+									// row: 0,
+									column: 0, 
+									background: "lightgray", 
+									margin: new go.Margin(10, 0, 10, 0),
+									maxSize: new go.Size(450,NaN),
+								},
+								new go.Binding("text", "name", function (e) {
+									return e
+								})),
+							$(go.TextBlock,
+								{ 
+									// row: 1, 
+									column: 0, 
+									background: "lightgray",
+									maxSize: new go.Size(450,NaN),
+									margin: new go.Margin(0, 0, 10, 0),
+								}, new go.Binding("text", "content", function (e) {
+									return e || '--'
+								})),
+							$(go.TextBlock, 
+								{ 
+									// row: 2, 
+									column: 0, 
+									background: "lightgray", 
+									maxSize: new go.Size(450,NaN)
+								}, new go.Binding("text", "name", function (e) {
+									return e
+								})),
+						)
+
+					),
+
+
+					// the Panel holding the top port elements, which are themselves Panels,
+					// created for each item in the itemArray, bound to data.topArray
+					$(go.Panel, "Horizontal",
+
+						new go.Binding("itemArray", "topArray"),
+						{
+							row: 0, column: 1,
+							itemTemplate:
+								$(go.Panel,
+									{
+										_side: "top",
+										fromSpot: go.Spot.Top, toSpot: go.Spot.Top,
+										fromLinkable: true, toLinkable: true, cursor: "pointer",
+										// contextMenu: portMenu
+									},
+									new go.Binding("portId", "portId"),
+									$(go.Shape, "Rectangle",
+										{
+											stroke: null, strokeWidth: 0,
+											desiredSize: portSize,
+											margin: new go.Margin(0, 1),
+											width: 0,
+											height: 0
+										},
+										new go.Binding("fill", "portColor"))
+								)  // end itemTemplate
+						}
+					),  // end Horizontal Panel
+
+		
+					$(go.Panel, "Horizontal",
+						new go.Binding("itemArray", "bottomArray"),
+						{
+							row: 3, column: 1,
+							itemTemplate:
+								$(go.Panel,
+									{
+										_side: "bottom",
+										fromSpot: go.Spot.Bottom, toSpot: go.Spot.Bottom,
+										fromLinkable: true, toLinkable: true, cursor: "pointer",
+										// contextMenu: portMenu,
+									},
+									new go.Binding("portId", "portId"),
+									// $(go.Shape, "Rectangle",
+									// 	{
+									// 		stroke: null, strokeWidth: 0,
+									// 		desiredSize: portSize,
+									// 		margin: new go.Margin(0, 1)
+									// 	},
+									// 	new go.Binding("fill", "portColor")),
+
+									$(go.TextBlock, { background: "pink", stroke: "blue", margin: new go.Margin(0, 3) },
+										new go.Binding("text", "portId", function (e) {
+											// return '123'
+											return e
+										})
+									),
+
+								)
+						}
+					)  // end Horizontal Panel
+				);  // end Node
+
+			*/
+
+			// an orthogonal link template, reshapable and relinkable
+			myDiagram.linkTemplate =
+				$(go.Link,  // defined below
+					{
+						// routing: go.Link.AvoidsNodes, // 连接线避开节点
+						// corner: 5,
+						// reshapable: true,  // 允许线形修改
+						// resegmentable: true, // 允许连线分割（折线）修改
+						// relinkableFrom: true, // 允许连线头重设
+						// relinkableTo: true, // 允许连线尾重设
+						// // toShortLength: 4, // 直角弧度，箭头弧度
+
+						// // 鼠标移到连线上后高亮
+						// // mouseEnter: function(e, link) { link.findObject("HIGHLIGHT").stroke = "rgba(30,144,255,0.2)"; },
+						// mouseLeave: function(e, link) { link.findObject("HIGHLIGHT").stroke = "transparent"; },
+						// selectionAdorned: false,
+
+						routing: go.Link.AvoidsNodes,
+						corner: 5,
+						toShortLength: 4,
+						relinkableFrom: !0,
+						relinkableTo: !1,
+						reshapable: !0,
+						resegmentable: !0,
+						selectionAdorned: !1
+					},
+					// new go.Binding("points").makeTwoWay(),  // 双向绑定模型中"points"数组属性
+					$(go.Shape, { stroke: "#2F4F4F", strokeWidth: 2, fill: "gray" }),
+					$(go.Shape,  // 箭头规格
+						{ toArrow: "standard", strokeWidth: 0, fill: "gray" }
+					),
+				);
+
+			// support double-clicking in the background to add a copy of this data as a node
+			// myDiagram.toolManager.clickCreatingTool.archetypeNodeData = {
+			// 	name: "Unit",
+			// 	leftArray: [],
+			// 	rightArray: [],
+			// 	topArray: [],
+			// 	bottomArray: []
+			// };
+
+			// myDiagram.contextMenu =
+			// 	$("ContextMenu",
+			// 		makeButton("Paste",
+			// 			function (e, obj) { e.diagram.commandHandler.pasteSelection(e.diagram.toolManager.contextMenuTool.mouseDownPoint); },
+			// 			function (o) { return o.diagram.commandHandler.canPasteSelection(o.diagram.toolManager.contextMenuTool.mouseDownPoint); }),
+			// 		makeButton("Undo",
+			// 			function (e, obj) { e.diagram.commandHandler.undo(); },
+			// 			function (o) { return o.diagram.commandHandler.canUndo(); }),
+			// 		makeButton("Redo",
+			// 			function (e, obj) { e.diagram.commandHandler.redo(); },
+			// 			function (o) { return o.diagram.commandHandler.canRedo(); })
+			// 	);
+
+			// load the diagram from JSON data
+			load();
+		}
+
+
+
+
+
+
+
+
+
+
+
+
+		function load() {
+			myDiagram.model = go.Model.fromJson(JSON.stringify({
+				"class": "go.GraphLinksModel",
+				"copiesArrays": true,
+				"copiesArrayObjects": true,
+				"linkFromPortIdProperty": "fromPort",
+				"linkToPortIdProperty": "toPort",
+				"nodeDataArray": [
+					{
+						"key": 1, "name": "1111", "loc": "100 204",
+						"content": "11啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的11",
+						"topArray": [{ "portColor": "#fff", "portId": "top0" }],
+						"bottomArray": [{ "portColor": "#ebe3fc", "portId": "bottom0", }, { "portColor": "#fadfe5", "portId": "bottom1" }, { "portColor": "#ebe3fc", "portId": "bottom0", }, { "portColor": "#fadfe5", "portId": "bottom1" }, { "portColor": "#ebe3fc", "portId": "bottom0", }, { "portColor": "#fadfe5", "portId": "bottom1" }, { "portColor": "#ebe3fc", "portId": "bottom0", }, { "portColor": "#fadfe5", "portId": "bottom1" }],
+					},
+					{
+						"key": 2, "name": "2222", "loc": "320 152",
+						"content": "2啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的22",
+						"topArray": [{ "portColor": "#fff", "portId": "top0" }],
+						"bottomArray": [{ "portColor": "#eaeef8", "portId": "bottom0" }, { "portColor": "#eaeef8", "portId": "bottom1" }, { "portColor": "#6cafdb", "portId": "bottom2" }],
+					},
+					{
+						"key": 3, "name": "3333", "loc": "384 319",
+						content: '',
+						"topArray": [{ "portColor": "#fff", "portId": "top0" }],
+						"bottomArray": [{ "portColor": "#6cafdb", "portId": "bottom0" }],
+					},
+					{
+						"key": 4, "name": "4444", "loc": "138 351",
+						content: '',
+						"topArray": [{ "portColor": "#fff", "portId": "top0" }],
+						"bottomArray": [{ "portColor": "#6cafdb", "portId": "bottom0" }],
+					}
+				],
+				"linkDataArray": [
+					{ "from": 1, "to": 2, "fromPort": "bottom0", "toPort": "top0" },
+					{ "from": 1, "to": 2, "fromPort": "bottom1", "toPort": "top0" },
+					{ "from": 2, "to": 4, "fromPort": "bottom0", "toPort": "top0" },
+					{ "from": 2, "to": 3, "fromPort": "top0", "toPort": "top0" },
+					{ "from": 3, "to": 4, "fromPort": "bottom0", "toPort": "top0" },
+					// { "from": 4, "to": 3, "fromPort": "right0", "toPort": "top0" },
+					// { "from": 4, "to": 3, "fromPort": "right1", "toPort": "top0" },
+				]
+			}));
+
+		}
+		window.addEventListener('DOMContentLoaded', init);
+	</script>
+
+	<div id="myDiagramDiv" style="width:1000px; height:800px; border:1px solid black"></div>
+</div>
+
+</html>

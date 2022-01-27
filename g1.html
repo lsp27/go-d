@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover" />
+	<meta name="description" content="Nodes with varying lists of ports on each of four sides." />
+	<title>Dynamic Ports</title>
+	<script src="./go-bug.js"></script>
+</head>
+
+<body>
+
+	<div class="md:flex flex-col md:flex-row md:min-h-screen w-full max-w-screen-xl mx-auto">
+	</div>
+</body>
+
+
+<div class="p-4 w-full">
+	<script id="code">
+
+		function textStyle() {
+			return { font: "9pt  Segoe UI,sans-serif", stroke: "white" };
+		}
+
+		function init() {
+			var $ = go.GraphObject.make;  //for conciseness in defining node templates
+
+
+		
+
+			myDiagram =
+				$(go.Diagram, "myDiagramDiv",  //Diagram refers to its DIV HTML element by id
+					{ 
+						"undoManager.isEnabled": true,
+						layout: $(go.LayeredDigraphLayout, {
+								direction: 90,
+								isOngoing: !1
+						})
+				 	}
+				);
+
+			// when the document is modified, add a "*" to the title and enable the "Save" button
+			myDiagram.addDiagramListener("Modified", function (e) {
+				var button = document.getElementById("SaveButton");
+				if (button) button.disabled = !myDiagram.isModified;
+				var idx = document.title.indexOf("*");
+				if (myDiagram.isModified) {
+					if (idx < 0) document.title += "*";
+				} else {
+					if (idx >= 0) document.title = document.title.substr(0, idx);
+				}
+			});
+
+			var myToolTip = $(go.HTMLInfo, {
+        show: showToolTip,
+				hide: hideToolTip
+        // do nothing on hide: This tooltip doesn't hide unless the mouse leaves the diagram
+      })
+
+			function showToolTip(obj, diagram) {
+				console.log('obj', obj)
+				console.log('diagram', diagram)
+
+				// if (obj !== null) {
+        //   var node = obj.part;
+        //   var e = diagram.lastInput;
+        //   // var shape = node.findObject("SHAPE");
+        //   // shape.stroke = "white";
+        //   // if (lastStroked !== null && lastStroked !== shape) lastStroked.stroke = null;
+        //   // lastStroked = shape;
+        //   updateInfoBox(e.viewPoint, node.data);
+        // } else {
+        //   if (lastStroked !== null) lastStroked.stroke = null;
+        //   lastStroked = null;
+        //   document.getElementById("infoBoxHolder").innerHTML = "";
+        // }
+			}
+
+			function hideToolTip(mousePt, data) {
+				// _this.style = ''
+				// _this.content = ''
+				
+			}
+
+
+
+
+
+			// the node template
+			myDiagram.nodeTemplate =
+			// $("normal", $(go.Node, "Auto"), A("normalBg"),
+			$(go.Node, "Auto",
+				$(go.Shape, "RoundedRectangle", {
+					fill: "red",
+					stroke: null,
+					strokeWidth: 2,
+				}),
+				$(go.Panel, "Table", {
+					minSize: new go.Size(180,30),
+					margin: new go.Margin(0,10,10,10)
+				},
+				$(go.RowColumnDefinition, {
+						column: 0,
+						stretch: go.GraphObject.Horizontal,
+						alignment: go.Spot.Left
+				}),
+				$(go.TextBlock, {
+						row: 0,
+						column: 0,
+						font: "14px bold ",
+						stroke: "#2E3846",
+						editable: !1,
+						margin: new go.Margin(15,0,0,3),
+						wrap: go.TextBlock.WrapFit,
+						alignment: go.Spot.TopLeft
+				}, new go.Binding("text","",function(e) {
+						return 'aaaa:bbb'
+				}
+				)),
+				$("Button",
+					{
+						row: 0,
+						column: 1,
+						cursor: "pointer",
+						margin: new go.Margin(11,0,0,2),
+						alignment: go.Spot.TopRight,
+						"ButtonBorder.fill": "transparent",
+						"ButtonBorder.stroke": "transparent",
+						_buttonFillOver: "transparent",
+						_buttonStrokeOver: "transparent",
+						// margin: 2,
+						click: function(e, button) { alert(button.findObject("PIC").source); }
+					},
+					// the button content can be anything -- it doesn't have to be a TextBlock
+					$(go.Picture, "./customer1.png", { name: "PIC", width: 10, height: 10 }),
+					{
+						// toolTip:  // define a tooltip for each node that displays the color as text
+						// 	$("ToolTip",
+						// 		$(go.TextBlock, { margin: 4 },
+						// 			new go.Binding("text", "name"))
+						// 	)  // end of Adornment
+						toolTip: myToolTip
+
+					}
+			),
+				$(go.TextBlock, {
+					row: 1,
+							column: 0,
+							font: "12px bold ",
+							stroke: "#333",
+							margin: new go.Margin(10,0,10,3),
+							editable: !1,
+							alignment: go.Spot.TopLeft,
+							maxSize: new go.Size(450,NaN)
+					}, new go.Binding("text","",function(e) {
+							// var t = e.textAudioContentList;
+							return (e.key) || "-"
+					})
+				),
+				$(go.TextBlock, {
+						row: 2,
+							column: 0,
+							font: "12px bold ",
+							stroke: "#333",
+							margin: new go.Margin(10,0,10,3),
+							editable: !1,
+							alignment: go.Spot.TopLeft,
+							maxSize: new go.Size(450,NaN)
+					}, new go.Binding("text","",function(e) {
+							// var t = e.textAudioContentList;
+							return e?.bottomArray?.length || '下一步：机器人张画结束语'
+					})
+				),
+				
+				
+				
+
+				$(go.Panel, "Horizontal", {
+					row: 3,
+					alignment: go.Spot.BottomCenter
+				},
+				new go.Binding("itemArray", "bottomArray"), {
+					column: 0,
+					itemTemplate: $(go.Panel, "Auto", {
+								fromSpot: go.Spot.Bottom,
+								toSpot: go.Spot.Bottom,
+								fromLinkable: !0,
+								toLinkable: !1,
+								toMaxLinks: 1,
+								fromMaxLinks: 1,
+								cursor: "pointer",
+								margin: new go.Margin(0,8,0,3),
+								fromLinkable: true, toLinkable: true, cursor: "pointer",
+						}, new go.Binding("portId","portId",function(e) {
+								return e.toString()
+						}),
+						$(go.Shape, "RoundedRectangle", {
+									stroke: null,
+									strokeWidth: 0,
+									toMaxLinks: 1,
+									fill: "#DFDEDE"
+							}, new go.Binding("fill","branchProperty",function(e) {
+									return "#DFDEDE"
+							}
+						)),
+						 $(go.TextBlock, {
+									font: "12px bold ",
+									stroke: "#333",
+									margin: new go.Margin(4,4,4,3),
+									textAlign: "center"
+							}, new go.Binding("text","name"), new go.Binding("stroke","branchProperty",function(e) {
+									return "#333"
+								})
+							)
+						)
+					})					
+					
+			)),
+
+
+
+
+
+			// an orthogonal link template, reshapable and relinkable
+			myDiagram.linkTemplate =
+				$(go.Link,  // defined below
+					{
+
+						// routing: go.Link.AvoidsNodes,
+						// corner: 5,
+						// toShortLength: 4,
+						// relinkableFrom: !0,
+						// relinkableTo: !1,
+						// reshapable: !0,
+						// resegmentable: !0,
+						// selectionAdorned: !1
+						routing: go.Link.AvoidsNodes,
+							corner: 5,
+							toShortLength: 4,
+							relinkableFrom: !0,
+							relinkableTo: !1,
+							reshapable: !0,
+							resegmentable: !0,
+							mouseEnter: function(e, t) {
+									// t.findObject("HIGHLIGHT").stroke = "rgba(30,144,255,0.2)"
+							},
+							mouseLeave: function(e, t) {
+									// t.findObject("HIGHLIGHT").stroke = "transparent"
+							},
+							selectionAdorned: !1
+					},
+					// new go.Binding("points").makeTwoWay(),  // 双向绑定模型中"points"数组属性
+					$(go.Shape, { stroke: "#2F4F4F", strokeWidth: 2, fill: "gray" }),
+					$(go.Shape,  // 箭头规格
+						{ toArrow: "standard", strokeWidth: 0, fill: "gray" }
+					),
+				);
+
+			load();
+		}
+
+
+
+
+
+		function load() {
+			myDiagram.model = go.Model.fromJson(JSON.stringify({
+				"class": "go.GraphLinksModel",
+				"copiesArrays": true,
+				"copiesArrayObjects": true,
+				"linkFromPortIdProperty": "fromPort",
+				// "linkToPortIdProperty": "toPort",
+				"nodeDataArray": [
+					{
+						"key": '1', "name": "1111", "loc": "100 204",
+						"content": "11啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的11",
+						"topArray": [{ "portColor": "#fff", "portId": "top0", name: '1' }],
+						"bottomArray": [{ "portColor": "#ebe3fc", "portId": "bottom0", name: '11'}, { "portColor": "#fadfe5", "portId": "bottom1", name: '12'}, { "portColor": "#ebe3fc", "portId": "bottom2", name: '12'}, { "portColor": "#fadfe5", "portId": "bottom3" , name: '13'}, { "portColor": "#ebe3fc", "portId": "bottom4", name: '14' }, { "portColor": "#fadfe5", "portId": "bottom5" , name: '15'}, { "portColor": "#ebe3fc", "portId": "bottom6",name: '16' }],
+					},
+					{
+						"key": '2', "name": "2222", "loc": "320 152",
+						"content": "2啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的啊实打实的22",
+						"topArray": [{ "portColor": "#fff", "portId": "top0", name: '2' }],
+						"bottomArray": [{ "portColor": "#eaeef8", "portId": "bottom0",  name: '21'}, { "portColor": "#eaeef8", "portId": "bottom1",  name: '22' }, { "portColor": "#6cafdb", "portId": "bottom2" ,  name: '23'}],
+					},
+					{
+						"key": '3', "name": "3333", "loc": "384 319",
+						content: '333',
+						"topArray": [{ "portColor": "#fff", "portId": "top0", name: '3' }],
+						"bottomArray": [{ "portColor": "#6cafdb", "portId": "bottom0",  name: '31' }],
+					},
+					{
+						"key": '4', "name": "4444", "loc": "138 351",
+						content: '444',
+						"topArray": [{ "portColor": "#fff", "portId": "top0", name: '4' }],
+						"bottomArray": [{ "portColor": "#6cafdb", "portId": "bottom0" ,  name: '41'}],
+					},
+					{
+						"key": '5', "name": "555", "loc": "238 551",
+						content: '555',
+						"topArray": [{ "portColor": "#fff", "portId": "top0", name: '5' }],
+						"bottomArray": [],
+					}
+				],
+				"linkDataArray": [
+					{ "from": '1', "to": '2', "fromPort": "bottom0"},
+					{ "from": '1', "to": '2', "fromPort": "bottom1"},
+					{ "from": '2', "to": '4', "fromPort": "bottom0"},
+					{ "from": '2', "to": '3', "fromPort": "bottom2"},
+					{ "from": '3', "to": '4', "fromPort": "bottom0"},
+					// { "from": 4, "to": 3, "fromPort": "right0", "toPort": "top0" },
+					// { "from": 4, "to": 3, "fromPort": "right1", "toPort": "top0" },
+				]
+			}));
+
+		}
+		window.addEventListener('DOMContentLoaded', init);
+	</script>
+
+	<div id="myDiagramDiv" style="width:1000px; height:800px; border:1px solid black"></div>
+</div>
+
+</html>

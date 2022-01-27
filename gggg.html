@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Document</title>
+	<script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+	<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+	<script src="https://unpkg.com/gojs/release/go-debug.js"></script>
+	<script src="./aaago.js"></script>
+</head>
+
+<body>
+
+	<div id="app">
+		<div id="myDiagramDiv"
+			style="border: 1px solid black; width: 100%; height: 600px; position: relative; -webkit-tap-highlight-color: rgba(255, 255, 255, 0); cursor: auto;">
+			<canvas tabindex="0" width="1808" height="1196" style="width: 904px; height: 598px; cursor: auto;"></canvas>
+		</div>
+	</div>
+
+
+	<script>
+
+
+
+		new Vue({
+			el: '#app',
+			data: {
+
+			},
+			mounted() {
+				const $ = go.GraphObject.make
+
+				var myDiagram =
+					$(go.Diagram, "myDiagramDiv",
+						{
+							"undoManager.isEnabled": false,
+							initialContentAlignment: go.Spot.Center,
+							initialAutoScale: go.Diagram.UniformToFill,
+							layout: $(go.LayeredDigraphLayout, { direction: 90 }),
+							"toolManager.hoverDelay": 30,
+							"undoManager.isEnabled": true,
+							// 是否允许从Palette面板拖入元素
+							// allowDrop: true,
+						}
+					);
+
+				myDiagram.addDiagramListener("Modified", function (e) {
+					var button = document.getElementById("SaveButton");
+					if (button) button.disabled = !myDiagram.isModified;
+					var idx = document.title.indexOf("*");
+					if (myDiagram.isModified) {
+						if (idx < 0) document.title += "*";
+					} else {
+						if (idx >= 0) document.title = document.title.substr(0, idx);
+					}
+				});
+
+				function makePort(name, leftside) {
+
+					var lab = $(go.TextBlock, name,  // the name of the port
+						{
+							font: "7pt sans-serif",
+							stroke: "red",
+							background: "lightblue",
+							alignment: go.Spot.Center,
+							textAlign: 'center',
+							portId: name,
+							height: 24,
+							width: 40,
+							verticalAlignment: go.Spot.Center,
+						});
+					var panel = $(go.Panel, "Vertical",
+						{ margin: new go.Margin(10, 10) });
+
+
+					if (leftside) {
+
+					} else {
+						lab.fromSpot = go.Spot.Bottom;
+						lab.fromLinkable = true;
+						lab.margin = new go.Margin(0, 0, 0, 0);
+						panel.alignment = go.Spot.Center;
+						panel.add(lab);
+						// panel.add(port);
+					}
+					return panel;
+				}
+
+				
+				// go.Brush.randomColor()
+
+				function makeTemplate(typename, icon, background, inports, outports) {
+					var node = $(go.Node, "Spot",
+						$(go.Panel, "Auto",
+							$(go.Shape,
+								"RoundedRectangle",
+								{
+									fill: background,
+
+									stroke: null,
+									strokeWidth: 2
+								}),
+							$(go.Panel, "Table", {
+								minSize: new go.Size(180, 30),
+								margin: new go.Margin(0, 10, 10, 0)
+							},
+								$(go.RowColumnDefinition, {
+									column: 0,
+									stretch: go.GraphObject.Horizontal,
+									alignment: go.Spot.Left
+								}),
+
+								$("Button",
+									{
+										column: 4,
+										cursor: "pointer",
+										margin: new go.Margin(11, 0, 0, 2),
+										alignment: go.Spot.TopRight,
+										"ButtonBorder.fill": "transparent",
+										"ButtonBorder.stroke": "transparent",
+										_buttonFillOver: "transparent",
+										_buttonStrokeOver: "transparent",
+										// margin: 2,
+										click: function (e, button) { alert(button.findObject("PIC").source); }
+									},
+
+									$(go.Picture, "./customer1.png", { name: "PIC", width: 10, height: 10 }),
+									{
+										// toolTip: myToolTip
+
+									}
+								),
+								// https://gojs.net/latest/samples/dataVisualization.html
+								$(go.Shape, "Circle", {
+									fill: "red",
+									height: 5,
+									stroke: null,
+									margin: new go.Margin(-44, 0, 0, 3),
+								}),
+
+								$(go.TextBlock, typename,
+									{
+										column: 0,
+										font: "bold 11pt sans-serif",
+										stroke: "#2E3846",
+										editable: false,
+										margin: new go.Margin(10, 0, 0, 10),
+										wrap: go.TextBlock.WrapFit,
+										alignment: go.Spot.TopLeft
+									},
+
+								),
+
+								$(go.TextBlock,
+									{
+										column: 0,
+										stroke: "#333",
+										margin: new go.Margin(35, 0, 30, 10),
+										editable: false,
+										alignment: go.Spot.TopLeft,
+										maxSize: new go.Size(450, NaN)
+									},
+									new go.Binding("text", "speechTechnique").makeTwoWay()),
+							)
+						),
+
+						// $(go.Panel, "Horizontal",
+						// 	{
+						// 		alignment: go.Spot.Top,
+						// 		alignmentFocus: new go.Spot(0, 0, 0, 0)
+						// 	},
+						// 	inports),
+						$(go.Panel, "Horizontal",
+							{
+								alignment: go.Spot.Bottom,
+								alignmentFocus: new go.Spot(0.5, 1, 0, -4)
+							},
+							outports)
+					);
+					myDiagram.nodeTemplateMap.set(typename, node);
+				}
+
+
+				// makeTemplate("Table", "https://gojs.net.cn/images/samples/55x55.png", "forestgreen",
+				// 	[],
+				// 	[makePort("OUT", false), makePort("OUT1", false)]);
+
+				// makeTemplate("Join", "https://gojs.net.cn/images/samples/55x55.png", "mediumorchid",
+				// 	[makePort("L", true), makePort("R", true)],
+				// 	[makePort("UL", false), makePort("ML", false), makePort("M", false), makePort("MR", false), makePort("UR", false)]);
+
+				// makeTemplate("Project", "https://gojs.net.cn/images/samples/55x55.png", "darkcyan",
+				// 	[makePort("", true)],
+				// 	[makePort("OUT", false)]);
+				// makeTemplate("Filter", "https://gojs.net.cn/images/samples/55x55.png", "cornflowerblue",
+				// 	[makePort("", true)],
+				// 	[makePort("OUT", false), makePort("INV", false)]);
+				// makeTemplate("Group", "https://gojs.net.cn/images/samples/55x55.png", "mediumpurple",
+				// 	[makePort("", true)],
+				// 	[makePort("OUT", false)]);
+				// makeTemplate("Sort", "https://gojs.net.cn/images/samples/55x55.png", "sienna",
+				// 	[makePort("", true)],
+				// 	[makePort("OUT", false)]);
+				// makeTemplate("Export", "https://gojs.net.cn/images/samples/55x55.png", "darkred",
+				// 	[makePort("", true)],
+				// 	[]);
+
+
+				// myDiagram.model = go.Model.fromJson(JSON.stringify({
+				// 	"class": "go.GraphLinksModel",
+				// 	"nodeCategoryProperty": "type",
+				// 	"linkFromPortIdProperty": "frompid",
+				// 	"linkToPortIdProperty": "topid",
+				// 	"nodeDataArray": [
+				// 		{ "key": 1, "type": "Table", "name": "Product1231231231231231231232112312", "tlp": "我是tlp" },
+				// 		{ "key": 11, "type": "Join", "name": "Product, Class" },
+				// 		{ "key": 12, "type": "Join", "name": "Period" },
+				// 		{ "key": 13, "type": "Join", "name": "Store" },
+				// 		{ "key": 21, "type": "Project", "name": "Product, Class" },
+				// 		{ "key": 31, "type": "Filter", "name": "Boston, Jan2014" },
+				// 		{ "key": 32, "type": "Filter", "name": "Boston, 2014" },
+				// 		{ "key": 41, "type": "Group", "name": "Sales" },
+				// 		{ "key": 42, "type": "Group", "name": "Total Sales" },
+				// 		{ "key": 51, "type": "Join", "name": "Product Name" },
+				// 		{ "key": 61, "type": "Sort", "name": "Product Name" },
+				// 		{ "key": 71, "type": "Export", "name": "File" }
+				// 	],
+				// 	"linkDataArray": [
+				// 		{ "from": 1, "frompid": "OUT", "to": 11, "topid": "L" },
+				// 		{ "from": 1, "frompid": "OUT1", "to": 12, "topid": "R" },
+				// 		{ "from": 11, "frompid": "M", "to": 12, "topid": "L" },
+				// 		{ "from": 12, "frompid": "M", "to": 13, "topid": "L" },
+				// 		{ "from": 13, "frompid": "M", "to": 21 },
+				// 		{ "from": 21, "frompid": "OUT", "to": 31 },
+				// 		{ "from": 21, "frompid": "OUT", "to": 32 },
+				// 		{ "from": 31, "frompid": "OUT", "to": 41 },
+				// 		{ "from": 32, "frompid": "OUT", "to": 42 },
+				// 		{ "from": 41, "frompid": "OUT", "to": 51, "topid": "L" },
+				// 		{ "from": 42, "frompid": "OUT", "to": 51, "topid": "R" },
+				// 		{ "from": 51, "frompid": "OUT", "to": 61 },
+				// 		{ "from": 61, "frompid": "OUT", "to": 71 }
+				// 	]
+				// }))
+
+
+				const arr = window.ddd.object
+				const nodeArr = []
+				const linkArr = []
+				window.ddd.object.forEach(item => {
+					nodeArr.push({
+						...item,
+						key: item.stateId,
+						branches: [...item.branches],
+						background: 'forestgreen',
+					})
+					if (item.branches && item.branches.length) {
+						item.branches.forEach(it => {
+							linkArr.push({
+								...it,
+								from: item.stateId,
+								frompid: it.branchId,
+								to: it.nextStateId,
+								topid: '',
+							})
+						})
+					}
+				})
+
+				myDiagram.linkTemplate =
+					$(go.Link,
+						{
+							// routing: go.Link.Orthogonal,
+							// corner: 5,
+							// relinkableFrom: true,
+							// relinkableTo: true,
+							// resegmentable: true,
+
+							routing: go.Link.AvoidsNodes,
+							corner: 5,
+							toShortLength: 4,
+							relinkableFrom: !0,
+							relinkableTo: !1,
+							reshapable: !0,
+							resegmentable: !0,
+							mouseEnter: function(e, t) {
+									// t.findObject("HIGHLIGHT").stroke = "rgba(30,144,255,0.2)"
+							},
+							mouseLeave: function(e, t) {
+									// t.findObject("HIGHLIGHT").stroke = "transparent"
+							},
+							selectionAdorned: !1
+						},
+						new go.Binding("points").makeTwoWay(),
+          	$(go.Shape, { stroke: "#2F4F4F", strokeWidth: 2 })
+						// $(go.Shape, { stroke: "red", strokeWidth: 2 }),
+						// $(go.Shape, { stroke: "gray", fill: "gray", toArrow: "Standard" })
+					);
+
+		
+
+				nodeArr.forEach(tem => {
+					makeTemplate(tem.name, "https://gojs.net.cn/images/samples/55x55.png", tem.background, [], (tem.branches || []).map(tmp => makePort(tmp.text, false)))
+				})
+
+
+				myDiagram.model =  go.Model.fromJson(JSON.stringify({
+					"class": "go.GraphLinksModel",
+					"nodeCategoryProperty": "name",
+					"linkFromPortIdProperty": "frompid",
+					"linkToPortIdProperty": "topid",
+					nodeDataArray: nodeArr,
+					linkDataArray: linkArr,
+				})) 
+
+
+
+			}
+		})
+
+	</script>
+
+</body>
+
+</html>
